@@ -1,6 +1,10 @@
+## 1.0.6
+
+* Fix: added required Android permissions (INTERNET, ACCESS_NETWORK_STATE, location) for release builds.
+
 ## 1.0.5
 
-* Fix: network connectivity check now works in Android release builds (added network security config).
+- Fix: network connectivity check now works in Android release builds (added network security config).
 
 ## 1.0.4
 
