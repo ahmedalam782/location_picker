@@ -70,7 +70,35 @@ Add these keys inside the `<dict>` tag:
 <string>This app needs access to your location to show it on the map.</string>
 ```
 
-> **Note:** iOS doesn't require explicit internet permission declarations. Network access is enabled by default. If you need to allow HTTP connections (non-HTTPS), configure App Transport Security in Info.plist.
+> **Network access:** iOS allows network connections by default. For HTTP (non-HTTPS) connections, configure App Transport Security in Info.plist.
+
+#### macOS — `macos/Runner/DebugProfile.entitlements` & `Release.entitlements`
+
+Add network client entitlements:
+
+```xml
+<key>com.apple.security.network.client</key>
+<true/>
+```
+
+For location access, also add to `macos/Runner/Info.plist`:
+
+```xml
+<key>NSLocationUsageDescription</key>
+<string>This app needs access to your location to show it on the map.</string>
+```
+
+#### Web
+
+No configuration needed. The package uses:
+- Browser Geolocation API for GPS (requires **HTTPS** in production)
+- OpenStreetMap tiles and Nominatim API (HTTPS)
+
+> **Note:** HTTP-only domains will not have access to browser geolocation. Deploy with HTTPS or use `localhost` for development.
+
+#### Windows & Linux
+
+No additional permissions required. Network access is available by default.
 
 ## Usage
 
