@@ -61,10 +61,16 @@ Add these permissions **before** the `<application>` tag:
 
 #### iOS — `ios/Runner/Info.plist`
 
+Add these keys inside the `<dict>` tag:
+
 ```xml
 <key>NSLocationWhenInUseUsageDescription</key>
 <string>This app needs access to your location to show it on the map.</string>
+<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+<string>This app needs access to your location to show it on the map.</string>
 ```
+
+> **Note:** iOS doesn't require explicit internet permission declarations. Network access is enabled by default. If you need to allow HTTP connections (non-HTTPS), configure App Transport Security in Info.plist.
 
 ## Usage
 
