@@ -1,9 +1,9 @@
 # location_picker
 
-[![pub package](https://img.shields.io/pub/v/location_picker.svg)](https://pub.dev/packages/location_picker)
-[![Platform](https://img.shields.io/badge/Platform-Flutter-02569B?logo=flutter)](https://flutter.dev/)
-[![Language](https://img.shields.io/badge/Language-Dart-0175C2?logo=dart)](https://dart.dev/)
-[![License: BSD-3-Clause](https://img.shields.io/badge/License-BSD%203--Clause-blue.svg)](https://github.com/ahmedalam782/location_picker/blob/main/LICENSE)
+[![pub package](https://img.shields.io/pub/v/location_picker.svg?label=pub)](https://pub.dev/packages/location_picker)
+[![Flutter](https://img.shields.io/badge/Flutter-3.0.0%2B-02569B?logo=flutter)](https://flutter.dev/)
+[![Platforms](https://img.shields.io/badge/Platforms-Android%20%7C%20iOS%20%7C%20macOS%20%7C%20Windows%20%7C%20Linux%20%7C%20Web-brightgreen)](https://flutter.dev/multi-platform)
+[![License: BSD-3](https://img.shields.io/badge/License-BSD%203--Clause-blue.svg)](https://github.com/ahmedalam782/location_picker/blob/main/LICENSE)
 
 A self-contained Flutter location picker powered by [OpenStreetMap](https://www.openstreetmap.org/).
 
