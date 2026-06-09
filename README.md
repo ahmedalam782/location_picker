@@ -48,11 +48,16 @@ dependencies:
 
 #### Android — `android/app/src/main/AndroidManifest.xml`
 
+Add these permissions **before** the `<application>` tag:
+
 ```xml
-<uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
-<uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
-<uses-permission android:name="android.permission.INTERNET" />
+<uses-permission android:name="android.permission.INTERNET"/>
+<uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+<uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+<uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
 ```
+
+> **Important for release builds:** The package checks internet connectivity before loading map tiles and performing geocoding searches. Both `INTERNET` and `ACCESS_NETWORK_STATE` permissions are required for the app to work properly in release mode.
 
 #### iOS — `ios/Runner/Info.plist`
 
