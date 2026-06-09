@@ -1,5 +1,10 @@
 # location_picker
 
+[![pub package](https://img.shields.io/pub/v/location_picker.svg)](https://pub.dev/packages/location_picker)
+[![Platform](https://img.shields.io/badge/Platform-Flutter-02569B?logo=flutter)](https://flutter.dev/)
+[![Language](https://img.shields.io/badge/Language-Dart-0175C2?logo=dart)](https://dart.dev/)
+[![License: BSD-3-Clause](https://img.shields.io/badge/License-BSD%203--Clause-blue.svg)](https://github.com/ahmedalam782/location_picker/blob/main/LICENSE)
+
 A self-contained Flutter location picker powered by [OpenStreetMap](https://www.openstreetmap.org/).
 
 > **No API key. No account. No billing.** Everything runs on free, open-source map and geocoding services — making this package a great fit for **small projects, prototypes, and indie apps** that don't want the overhead of registering with Google Maps or Mapbox.
