@@ -1,3 +1,7 @@
+## 1.0.5
+
+* Fix: network connectivity check now works in Android release builds (added network security config).
+
 ## 1.0.4
 
 - Fix: SVG icon assets not loading after package rename (wrong `package:` reference).

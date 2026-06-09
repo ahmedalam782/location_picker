@@ -1,6 +1,6 @@
 name: osm_location_picker
 description: "A self-contained Flutter location picker powered by OpenStreetMap. No API key required. Supports address search, GPS, and full theming."
-version: 1.0.4
+version: 1.0.5
 
 repository: https://github.com/ahmedalam782/osm_location_picker
 homepage: https://github.com/ahmedalam782/osm_location_picker
