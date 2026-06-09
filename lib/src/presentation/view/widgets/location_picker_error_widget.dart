@@ -19,20 +19,15 @@ class LocationPickerErrorWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final errorMessage = message != null
-        ? message.toString()
-        : 'Unexpected error occurred';
+    final errorMessage = message != null ? message.toString() : 'Unexpected error occurred';
 
     // Check if offline failure
-    final isOffline =
-        errorMessage.contains('لا يوجد') ||
-        errorMessage.toLowerCase().contains('internet') ||
-        errorMessage.toLowerCase().contains('offline') ||
-        errorMessage.toLowerCase().contains('connection');
+    final isOffline = errorMessage.contains('لا يوجد') || 
+                      errorMessage.toLowerCase().contains('internet') || 
+                      errorMessage.toLowerCase().contains('offline') || 
+                      errorMessage.toLowerCase().contains('connection');
 
-    final String? errorLottie = isOffline
-        ? theme.noInternetLottieAsset
-        : theme.errorLottieAsset;
+    final String? errorLottie = isOffline ? theme.noInternetLottieAsset : theme.errorLottieAsset;
 
     final content = Center(
       child: Padding(
@@ -53,9 +48,7 @@ class LocationPickerErrorWidget extends StatelessWidget {
                       fit: BoxFit.contain,
                     )
                   : Icon(
-                      isOffline
-                          ? Icons.wifi_off_rounded
-                          : Icons.error_outline_rounded,
+                      isOffline ? Icons.wifi_off_rounded : Icons.error_outline_rounded,
                       size: 64,
                       color: theme.primaryColor,
                     ),
@@ -66,11 +59,11 @@ class LocationPickerErrorWidget extends StatelessWidget {
             Text(
               isOffline
                   ? (Localizations.localeOf(context).languageCode == 'ar'
-                        ? 'لا يوجد اتصال بالإنترنت'
-                        : 'No Internet Connection')
+                      ? 'لا يوجد اتصال بالإنترنت'
+                      : 'No Internet Connection')
                   : (Localizations.localeOf(context).languageCode == 'ar'
-                        ? 'حدث خطأ ما'
-                        : 'Something went wrong'),
+                      ? 'حدث خطأ ما'
+                      : 'Something went wrong'),
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w600,
@@ -84,9 +77,7 @@ class LocationPickerErrorWidget extends StatelessWidget {
 
             // Error Message
             Text(
-              errorMessage
-                  .replaceFirst('Exception: ', '')
-                  .replaceFirst('Exception', ''),
+              errorMessage.replaceFirst('Exception: ', '').replaceFirst('Exception', ''),
               style: const TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w400,
@@ -119,13 +110,11 @@ class LocationPickerErrorWidget extends StatelessWidget {
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 24,
-                    vertical: 12,
-                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                 ),
               ),
             ],
+
           ],
         ),
       ),
@@ -133,8 +122,7 @@ class LocationPickerErrorWidget extends StatelessWidget {
 
     final VoidCallback? retryCallback = onRetry ?? onDismiss;
 
-    final bool isMobile =
-        !kIsWeb &&
+    final bool isMobile = !kIsWeb &&
         (defaultTargetPlatform == TargetPlatform.android ||
             defaultTargetPlatform == TargetPlatform.iOS);
 
@@ -148,7 +136,12 @@ class LocationPickerErrorWidget extends StatelessWidget {
           physics: const AlwaysScrollableScrollPhysics(
             parent: BouncingScrollPhysics(),
           ),
-          slivers: [SliverFillRemaining(hasScrollBody: false, child: content)],
+          slivers: [
+            SliverFillRemaining(
+              hasScrollBody: false,
+              child: content,
+            ),
+          ],
         ),
       );
     }
@@ -181,7 +174,10 @@ class _AnimatedErrorBackgroundState extends State<_AnimatedErrorBackground>
     )..repeat(reverse: true);
 
     _floatingAnimation = Tween<double>(begin: 0, end: -10).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOutSine),
+      CurvedAnimation(
+        parent: _controller,
+        curve: Curves.easeInOutSine,
+      ),
     );
   }
 
