@@ -132,8 +132,7 @@ class _LocationPickerBodyState extends State<LocationPickerBody>
                     state.addressData.state == StatusState.initial)
                 ? widget.strings.fetchingLocation
                 : (state.addressData.state == StatusState.failure)
-                ? (state.addressData.exception?.toString() ??
-                    widget.strings.locationFetchFailed)
+                ? widget.strings.searchHint
                 : (state.addressData.data != null &&
                     state.addressData.data!.isNotEmpty)
                 ? state.addressData.data!

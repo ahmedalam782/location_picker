@@ -1,3 +1,7 @@
+## 1.0.3
+
+* Fix: error message no longer shown as search bar hint text on offline/failure state.
+
 ## 1.0.2
 
 - Published to pub.dev.
