@@ -37,7 +37,7 @@ class MapAddressHeader extends StatelessWidget {
           children: [
             SvgPicture.asset(
               'assets/icons/search.svg',
-              package: 'location_picker',
+              package: 'osm_location_picker',
               colorFilter: ColorFilter.mode(
                 theme.primaryColor,
                 BlendMode.srcIn,

@@ -25,7 +25,7 @@ class MapCenterMarker extends StatelessWidget {
           children: [
             SvgPicture.asset(
               'assets/icons/location_mark.svg',
-              package: 'location_picker',
+              package: 'osm_location_picker',
               width: 45,
               height: 45,
               colorFilter: ColorFilter.mode(

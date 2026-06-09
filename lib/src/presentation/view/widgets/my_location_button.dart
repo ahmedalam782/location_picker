@@ -30,7 +30,7 @@ class MyLocationButton extends StatelessWidget {
           child: Center(
             child: SvgPicture.asset(
               'assets/icons/my_location.svg',
-              package: 'location_picker',
+              package: 'osm_location_picker',
               width: 24,
               height: 24,
               colorFilter: ColorFilter.mode(
