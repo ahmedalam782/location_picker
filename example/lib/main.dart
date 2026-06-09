@@ -15,10 +15,7 @@ class MyApp extends StatelessWidget {
       title: 'Location Picker Example',
       debugShowCheckedModeBanner: false,
       locale: const Locale('en'),
-      supportedLocales: const [
-        Locale('ar'),
-        Locale('en'),
-      ],
+      supportedLocales: const [Locale('ar'), Locale('en')],
       localizationsDelegates: const [
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
@@ -62,7 +59,9 @@ class _HomeScreenState extends State<HomeScreen> {
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.surfaceContainerHighest,
                     borderRadius: BorderRadius.circular(16),
                   ),
                   child: Column(
@@ -75,9 +74,8 @@ class _HomeScreenState extends State<HomeScreen> {
                       const SizedBox(height: 12),
                       Text(
                         'Address:',
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(height: 4),
                       Text(
@@ -91,8 +89,8 @@ class _HomeScreenState extends State<HomeScreen> {
                       Text(
                         'Coordinates:',
                         style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                       Text(
                         '${_selectedLocation!.latLng?.latitude.toStringAsFixed(6)}, ${_selectedLocation!.latLng?.longitude.toStringAsFixed(6)}',
@@ -110,20 +108,25 @@ class _HomeScreenState extends State<HomeScreen> {
                 const SizedBox(height: 16),
                 const Text(
                   'No Location Selected',
-                  style: TextStyle(fontSize: 16, color: Colors.grey, fontWeight: FontWeight.bold),
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Colors.grey,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ],
               const SizedBox(height: 40),
               ElevatedButton.icon(
                 onPressed: () async {
-                  final result = await Navigator.of(context).push<LocationModel>(
-                    MaterialPageRoute(
-                      builder: (context) => LocationPickerView(
-                        initialLatLng: _selectedLocation?.latLng,
-                        initialAddress: _selectedLocation?.address,
-                      ),
-                    ),
-                  );
+                  final result = await Navigator.of(context)
+                      .push<LocationModel>(
+                        MaterialPageRoute(
+                          builder: (context) => LocationPickerView(
+                            initialLatLng: _selectedLocation?.latLng,
+                            initialAddress: _selectedLocation?.address,
+                          ),
+                        ),
+                      );
                   if (result != null) {
                     setState(() {
                       _selectedLocation = result;
@@ -135,8 +138,14 @@ class _HomeScreenState extends State<HomeScreen> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xffEA3433),
                   foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-                  textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 32,
+                    vertical: 16,
+                  ),
+                  textStyle: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(16),
                   ),
