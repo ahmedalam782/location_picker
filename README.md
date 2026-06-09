@@ -1,9 +1,9 @@
-# location_picker
+# osm_location_picker
 
-[![pub package](https://img.shields.io/pub/v/location_picker.svg?label=pub)](https://pub.dev/packages/location_picker)
+[![pub package](https://img.shields.io/pub/v/osm_location_picker.svg?label=pub)](https://pub.dev/packages/osm_location_picker)
 [![Flutter](https://img.shields.io/badge/Flutter-3.0.0%2B-02569B?logo=flutter)](https://flutter.dev/)
 [![Platforms](https://img.shields.io/badge/Platforms-Android%20%7C%20iOS%20%7C%20macOS%20%7C%20Windows%20%7C%20Linux%20%7C%20Web-brightgreen)](https://flutter.dev/multi-platform)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/ahmedalam782/location_picker/blob/main/LICENSE)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/ahmedalam782/osm_location_picker/blob/main/LICENSE)
 
 A self-contained Flutter location picker powered by [OpenStreetMap](https://www.openstreetmap.org/).
 
@@ -40,7 +40,7 @@ Users can pan/zoom the map, search for addresses, and tap to confirm a location.
 
 ```yaml
 dependencies:
-  location_picker:
+  osm_location_picker:
     path: ../ # or the pub.dev version once published
 ```
 
@@ -66,7 +66,7 @@ dependencies:
 Push `LocationPickerView` as a full-screen route. It returns a `LocationModel?` when the user confirms a location.
 
 ```dart
-import 'package:location_picker/location_picker.dart';
+import 'package:osm_location_picker/osm_location_picker.dart';
 
 // Open the picker
 final LocationModel? result = await Navigator.of(context).push<LocationModel>(

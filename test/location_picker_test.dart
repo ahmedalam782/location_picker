@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:latlong2/latlong.dart';
-import 'package:location_picker/location_picker.dart';
+import 'package:osm_location_picker/osm_location_picker.dart';
 
 void main() {
   test('LocationModel toJson and fromJson serialization works', () {

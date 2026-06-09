@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:location_picker/location_picker.dart';
+import 'package:osm_location_picker/osm_location_picker.dart';
 
 void main() {
   runApp(const MyApp());
