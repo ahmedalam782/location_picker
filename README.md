@@ -1,0 +1,136 @@
+# location_picker
+
+A self-contained Flutter location picker powered by [OpenStreetMap](https://www.openstreetmap.org/).
+
+> **No API key. No account. No billing.** Everything runs on free, open-source map and geocoding services — making this package a great fit for **small projects, prototypes, and indie apps** that don't want the overhead of registering with Google Maps or Mapbox.
+
+Users can pan/zoom the map, search for addresses, and tap to confirm a location. The package returns a `LocationModel` containing the selected address string and `LatLng` coordinates.
+
+## Features
+
+- 🗺️ Interactive map using `flutter_map` + OpenStreetMap tiles
+- 🔍 Address search powered by the Nominatim geocoding service
+- 📍 Jump to the device's current GPS location with one tap
+- 🎨 Fully themeable via `LocationPickerTheme`
+- 🌐 Built-in Arabic and English UI strings — extend with `LocationPickerStrings`
+- 🏗️ BLoC/Cubit state management — no global state pollution
+- 📦 Zero external API keys needed
+
+## Platform support
+
+| Platform | Supported | Notes                                                  |
+| -------- | --------- | ------------------------------------------------------ |
+| Android  | ✅        | Full support                                           |
+| iOS      | ✅        | Full support                                           |
+| Web      | ✅        | Location uses browser Geolocation API — HTTPS required |
+| macOS    | ✅        | Full support                                           |
+| Windows  | ✅        | Full support                                           |
+| Linux    | ✅        | Full support                                           |
+
+> **Note:** GPS / current-location features depend on the [`location`](https://pub.dev/packages/location) package. On platforms where device location is unavailable or denied, the map still opens and the user can search or tap a location manually — so the picker always works regardless of permission status.
+
+## Getting started
+
+### 1. Add the dependency
+
+```yaml
+dependencies:
+  location_picker:
+    path: ../ # or the pub.dev version once published
+```
+
+### 2. Platform permissions
+
+#### Android — `android/app/src/main/AndroidManifest.xml`
+
+```xml
+<uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+<uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+<uses-permission android:name="android.permission.INTERNET" />
+```
+
+#### iOS — `ios/Runner/Info.plist`
+
+```xml
+<key>NSLocationWhenInUseUsageDescription</key>
+<string>This app needs access to your location to show it on the map.</string>
+```
+
+## Usage
+
+Push `LocationPickerView` as a full-screen route. It returns a `LocationModel?` when the user confirms a location.
+
+```dart
+import 'package:location_picker/location_picker.dart';
+
+// Open the picker
+final LocationModel? result = await Navigator.of(context).push<LocationModel>(
+  MaterialPageRoute(
+    builder: (_) => const LocationPickerView(),
+  ),
+);
+
+if (result != null) {
+  print(result.address);               // "Baghdad, Iraq"
+  print(result.latLng?.latitude);      // 33.315241
+  print(result.latLng?.longitude);     // 44.366085
+}
+```
+
+### Restore a previously selected location
+
+```dart
+LocationPickerView(
+  initialLatLng: LatLng(33.315241, 44.366085),
+  initialAddress: 'Baghdad, Iraq',
+)
+```
+
+### Custom theme
+
+```dart
+LocationPickerView(
+  theme: LocationPickerTheme(
+    primaryColor: Colors.teal,
+    backgroundColor: Colors.white,
+  ),
+)
+```
+
+Use `LocationPickerTheme.of(context)` to derive colours from your app's `ThemeData` automatically.
+
+### Custom strings / localisation
+
+```dart
+LocationPickerView(
+  strings: LocationPickerStrings(
+    title: 'Pick a spot',
+    confirmLocation: 'Use this location',
+    searchHint: 'Search address…',
+    // … all fields required
+  ),
+)
+```
+
+Built-in factories: `LocationPickerStrings.en()` and `LocationPickerStrings.ar()`.
+`LocationPickerStrings.of(context)` picks one automatically based on `Localizations.localeOf(context)`.
+
+### `LocationModel`
+
+| Field     | Type      | Description                           |
+| --------- | --------- | ------------------------------------- |
+| `address` | `String?` | Human-readable address from Nominatim |
+| `latLng`  | `LatLng?` | Coordinates (`latlong2` package)      |
+
+```dart
+// Serialise / deserialise
+final json = model.toJson();
+final model2 = LocationModel.fromJson(json);
+```
+
+## Additional information
+
+- Map tiles © [OpenStreetMap contributors](https://www.openstreetmap.org/copyright)
+- Geocoding provided by [Nominatim](https://nominatim.org/) — please respect the [usage policy](https://operations.osmfoundation.org/policies/nominatim/)
+- File bugs and feature requests on the project's issue tracker
+- Contributions are welcome — open a pull request with tests and a description of the change

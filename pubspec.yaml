@@ -1,0 +1,40 @@
+name: location_picker
+description: "A self-contained Flutter location picker powered by OpenStreetMap. No API key required. Supports address search, GPS, and full theming."
+version: 0.0.1
+
+repository: https://github.com/ahmedalam782/location_picker
+homepage: https://github.com/ahmedalam782/location_picker
+
+topics:
+  - map
+  - location
+  - geocoding
+  - openstreetmap
+  - gps
+
+environment:
+  sdk: ">=3.7.0 <4.0.0"
+  flutter: ">=3.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_bloc: ^9.1.1
+  flutter_map: ^8.3.0
+  latlong2: ^0.9.1
+  dio: ^5.9.2
+  flutter_svg: ^2.3.0
+  lottie: ^3.3.3
+  equatable: ^2.0.8
+  internet_connection_checker_plus: ^3.0.1
+  geolocator: ^14.0.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/icons/
