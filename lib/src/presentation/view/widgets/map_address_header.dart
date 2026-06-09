@@ -23,44 +23,41 @@ class MapAddressHeader extends StatelessWidget {
       child: GestureDetector(
         onTap: onTap,
         child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        decoration: BoxDecoration(
-          color: theme.cardColor,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: theme.borderColor,
-            width: 0.7,
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          decoration: BoxDecoration(
+            color: theme.cardColor,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: theme.borderColor, width: 0.7),
+            boxShadow: [theme.shadowBox],
           ),
-          boxShadow: [theme.shadowBox],
-        ),
-        child: Row(
-          children: [
-            SvgPicture.asset(
-              'assets/icons/search.svg',
-              package: 'osm_location_picker',
-              colorFilter: ColorFilter.mode(
-                theme.primaryColor,
-                BlendMode.srcIn,
+          child: Row(
+            children: [
+              SvgPicture.asset(
+                'assets/icons/search.svg',
+                package: 'osm_location_picker',
+                colorFilter: ColorFilter.mode(
+                  theme.primaryColor,
+                  BlendMode.srcIn,
+                ),
               ),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: Text(
-                  addressText,
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w400,
-                    color: theme.textDarkColor,
+              const SizedBox(width: 10),
+              Expanded(
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Text(
+                    addressText,
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w400,
+                      color: theme.textDarkColor,
+                    ),
                   ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
-    ),
     );
   }
 }

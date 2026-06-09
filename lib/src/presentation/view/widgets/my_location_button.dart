@@ -6,11 +6,7 @@ class MyLocationButton extends StatelessWidget {
   final VoidCallback onTap;
   final LocationPickerTheme theme;
 
-  const MyLocationButton({
-    super.key,
-    required this.onTap,
-    required this.theme,
-  });
+  const MyLocationButton({super.key, required this.onTap, required this.theme});
 
   @override
   Widget build(BuildContext context) {

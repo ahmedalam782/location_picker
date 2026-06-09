@@ -1,10 +1,10 @@
 ## 1.0.4
 
-* Fix: SVG icon assets not loading after package rename (wrong `package:` reference).
+- Fix: SVG icon assets not loading after package rename (wrong `package:` reference).
 
 ## 1.0.3
 
-* Fix: error message no longer shown as search bar hint text on offline/failure state.
+- Fix: error message no longer shown as search bar hint text on offline/failure state.
 
 ## 1.0.2
 
