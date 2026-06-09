@@ -91,6 +91,7 @@ For location access, also add to `macos/Runner/Info.plist`:
 #### Web
 
 No configuration needed. The package uses:
+
 - Browser Geolocation API for GPS (requires **HTTPS** in production)
 - OpenStreetMap tiles and Nominatim API (HTTPS)
 

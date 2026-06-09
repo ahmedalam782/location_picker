@@ -1,18 +1,11 @@
-## 1.0.6
-
-- Fix: added required Android permissions (INTERNET, ACCESS_NETWORK_STATE, location) for release builds.
-
-## 1.0.5
-
-- Fix: network connectivity check now works in Android release builds (added network security config).
-
-## 1.0.4
-
-- Fix: SVG icon assets not loading after package rename (wrong `package:` reference).
-
 ## 1.0.3
 
+- Fix: added required Android permissions (INTERNET, ACCESS_NETWORK_STATE, location) for release builds.
+- Fix: network connectivity check now works in Android release builds (added network security config).
+- Fix: SVG icon assets not loading after package rename (wrong `package:` reference).
 - Fix: error message no longer shown as search bar hint text on offline/failure state.
+- Added network and location permissions for iOS, macOS, and documentation for all platforms.
+- Updated README with comprehensive platform-specific setup instructions.
 
 ## 1.0.2
 
