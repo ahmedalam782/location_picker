@@ -1,6 +1,6 @@
 ## 1.0.6
 
-* Fix: added required Android permissions (INTERNET, ACCESS_NETWORK_STATE, location) for release builds.
+- Fix: added required Android permissions (INTERNET, ACCESS_NETWORK_STATE, location) for release builds.
 
 ## 1.0.5
 
