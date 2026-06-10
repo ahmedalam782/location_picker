@@ -1,3 +1,10 @@
+## 1.0.4
+
+- Fix: added macOS App Sandbox location entitlements and usage description keys to enable GPS location picking.
+- Fix: updated GPS fetching to use a 5-second timeout and fallback to the last known position to prevent indefinite hangs.
+- Fix: resolved target warnings in Xcode/CocoaPods builds regarding dependency analysis and deployment target versions.
+- Updated documentation and README with troubleshooting steps for macOS application run behaviors.
+
 ## 1.0.3
 
 - Fix: added required Android permissions (INTERNET, ACCESS_NETWORK_STATE, location) for release builds.

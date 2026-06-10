@@ -74,10 +74,12 @@ Add these keys inside the `<dict>` tag:
 
 #### macOS — `macos/Runner/DebugProfile.entitlements` & `Release.entitlements`
 
-Add network client entitlements:
+Add network client and location entitlements inside the `<dict>` tag:
 
 ```xml
 <key>com.apple.security.network.client</key>
+<true/>
+<key>com.apple.security.personal-information.location</key>
 <true/>
 ```
 
@@ -85,6 +87,10 @@ For location access, also add to `macos/Runner/Info.plist`:
 
 ```xml
 <key>NSLocationUsageDescription</key>
+<string>This app needs access to your location to show it on the map.</string>
+<key>NSLocationWhenInUseUsageDescription</key>
+<string>This app needs access to your location to show it on the map.</string>
+<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
 <string>This app needs access to your location to show it on the map.</string>
 ```
 
@@ -179,3 +185,9 @@ final model2 = LocationModel.fromJson(json);
 - Geocoding provided by [Nominatim](https://nominatim.org/) — please respect the [usage policy](https://operations.osmfoundation.org/policies/nominatim/)
 - File bugs and feature requests on the project's issue tracker
 - Contributions are welcome — open a pull request with tests and a description of the change
+
+## Troubleshooting
+
+### macOS: "Failed to foreground app; open returned 1"
+When running the application on macOS via `flutter run`, you may see this diagnostic warning. It is a known Flutter SDK behavior that occurs when the system cannot bring the app's window to the foreground (often because another window has focus, or when running with merged UI threads). If the application window launches successfully, this warning can be safely ignored.
+

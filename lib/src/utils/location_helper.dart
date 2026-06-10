@@ -82,8 +82,19 @@ class LocationHelper {
     }
 
     try {
-      return await Geolocator.getCurrentPosition();
+      return await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.high,
+          timeLimit: Duration(seconds: 5),
+        ),
+      );
     } catch (_) {
+      try {
+        final lastKnown = await Geolocator.getLastKnownPosition();
+        if (lastKnown != null) {
+          return lastKnown;
+        }
+      } catch (_) {}
       throw GpsFailure(fetchFailedMsg);
     }
   }
