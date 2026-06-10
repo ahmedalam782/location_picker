@@ -44,6 +44,15 @@ class LocationPickerStrings {
   /// Shown when an address search returns no results.
   final String noResults;
 
+  /// Title for the car tracking screen.
+  final String carTrackingTitle;
+
+  /// Label for start route action.
+  final String startRoute;
+
+  /// Banner text when arriving at the destination.
+  final String arrivedDestination;
+
   /// Creates a [LocationPickerStrings] with all fields required.
   const LocationPickerStrings({
     required this.title,
@@ -58,6 +67,9 @@ class LocationPickerStrings {
     required this.permissionPermanentlyDenied,
     required this.searchHint,
     required this.noResults,
+    required this.carTrackingTitle,
+    required this.startRoute,
+    required this.arrivedDestination,
   });
 
   /// Returns Arabic (العربية) UI strings.
@@ -74,6 +86,9 @@ class LocationPickerStrings {
     permissionPermanentlyDenied: 'تم رفض إذن الوصول للموقع بشكل دائم',
     searchHint: 'ابحث عن موقع...',
     noResults: 'لا توجد نتائج',
+    carTrackingTitle: 'تتبع السيارة',
+    startRoute: 'ابدأ الرحلة',
+    arrivedDestination: 'وصلنا للوجهة!',
   );
 
   /// Returns English UI strings.
@@ -90,6 +105,9 @@ class LocationPickerStrings {
     permissionPermanentlyDenied: 'Location permission permanently denied',
     searchHint: 'Search for a location...',
     noResults: 'No results found',
+    carTrackingTitle: 'Car Tracking',
+    startRoute: 'Start Route',
+    arrivedDestination: 'Arrived at destination!',
   );
 
   /// Returns the appropriate strings for the ambient locale.

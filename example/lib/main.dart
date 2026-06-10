@@ -1,17 +1,35 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:osm_location_picker/osm_location_picker.dart';
+import 'package:go_router/go_router.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await initDI();
   runApp(const MyApp());
 }
+
+final GoRouter _router = GoRouter(
+  initialLocation: '/',
+  routes: [
+    GoRoute(
+      path: '/',
+      builder: (context, state) => const HomeScreen(),
+    ),
+    GoRoute(
+      path: '/car-tracking',
+      builder: (context, state) => const CarMapScreen(),
+    ),
+  ],
+);
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return MaterialApp.router(
+      routerConfig: _router,
       title: 'Location Picker Example',
       debugShowCheckedModeBanner: false,
       locale: const Locale('en'),
@@ -26,7 +44,6 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xffEA3433)),
         useMaterial3: true,
       ),
-      home: const HomeScreen(),
     );
   }
 }
@@ -137,6 +154,27 @@ class _HomeScreenState extends State<HomeScreen> {
                 label: const Text('Open Location Picker'),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xffEA3433),
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 32,
+                    vertical: 16,
+                  ),
+                  textStyle: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              ElevatedButton.icon(
+                onPressed: () => context.push('/car-tracking'),
+                icon: const Icon(Icons.directions_car_rounded),
+                label: const Text('Open Car Tracking'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xff185FA5),
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(
                     horizontal: 32,
