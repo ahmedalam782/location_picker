@@ -1,6 +1,18 @@
 import 'package:dio/dio.dart';
 import 'package:latlong2/latlong.dart';
 
+class RouteData {
+  final List<LatLng> points;
+  final double distanceMeters;
+  final double durationSeconds;
+
+  RouteData({
+    required this.points,
+    required this.distanceMeters,
+    required this.durationSeconds,
+  });
+}
+
 class TrackingRepository {
   final Dio _dio;
 
@@ -33,6 +45,43 @@ class TrackingRepository {
       throw Exception('Failed to load route points');
     } catch (e) {
       throw Exception('Failed to load route points: $e');
+    }
+  }
+
+  /// Fetches detailed routing info including coordinates, distance, and duration.
+  Future<RouteData> getDetailedRoute(LatLng from, LatLng to) async {
+    final url = 'http://router.project-osrm.org/route/v1/driving/'
+        '${from.longitude},${from.latitude};${to.longitude},${to.latitude}'
+        '?overview=full&geometries=geojson';
+    try {
+      final response = await _dio.get(url);
+      if (response.statusCode == 200) {
+        final data = response.data;
+        final routes = data['routes'] as List?;
+        if (routes != null && routes.isNotEmpty) {
+          final distance = (routes[0]['distance'] as num?)?.toDouble() ?? 0.0;
+          final duration = (routes[0]['duration'] as num?)?.toDouble() ?? 0.0;
+          final geometry = routes[0]['geometry'] as Map<String, dynamic>?;
+          if (geometry != null) {
+            final coordinates = geometry['coordinates'] as List?;
+            if (coordinates != null) {
+              final points = coordinates.map((coord) {
+                final lng = (coord[0] as num).toDouble();
+                final lat = (coord[1] as num).toDouble();
+                return LatLng(lat, lng);
+              }).toList();
+              return RouteData(
+                points: points,
+                distanceMeters: distance,
+                durationSeconds: duration,
+              );
+            }
+          }
+        }
+      }
+      throw Exception('Failed to load detailed route');
+    } catch (e) {
+      throw Exception('Failed to load detailed route: $e');
     }
   }
 

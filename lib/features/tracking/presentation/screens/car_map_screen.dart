@@ -5,6 +5,7 @@ import 'package:latlong2/latlong.dart';
 import 'package:dio/dio.dart';
 import 'dart:async';
 import 'dart:convert';
+import 'dart:math';
 import '../../../../src/presentation/location_picker_strings.dart';
 import '../../../../injection_container.dart';
 import '../../data/tracking_repository.dart';
@@ -68,6 +69,16 @@ class _CarMapBodyState extends State<_CarMapBody> {
   StreamSubscription<String>? _socketMessageSub;
   StreamSubscription<SocketConnectionState>? _socketStatusSub;
   bool _isSocketSimulatorStarting = false;
+
+  // Uber/Careem live socket routing properties
+  LatLng? _socketDriverStart;
+  LatLng? _socketDestination;
+  List<LatLng> _socketRoutePoints = [];
+  bool _isFetchingSocketRoute = false;
+  double _remainingDistanceMeters = 0.0;
+  double _remainingDurationSeconds = 0.0;
+  double _totalDistanceMeters = 0.0;
+  bool _driverArrived = false;
 
   @override
   void initState() {
@@ -172,6 +183,11 @@ class _CarMapBodyState extends State<_CarMapBody> {
           context.read<CarAnimationCubit>().addLivePoint(point);
           // Center the map on the vehicle's new position
           _mapController.move(point, _mapController.camera.zoom);
+
+          // Update direction line in real-time if destination is defined
+          if (_socketDestination != null) {
+            _updateLiveDirectionLine(point);
+          }
         }
       } else if (type == 'system_log') {
         final message = data['message'] as String? ?? '';
@@ -186,19 +202,83 @@ class _CarMapBodyState extends State<_CarMapBody> {
     }
   }
 
+  Future<void> _updateLiveDirectionLine(LatLng vehiclePos) async {
+    if (_socketDestination == null || _isFetchingSocketRoute) return;
+
+    // Check if we already arrived (distance < 15 meters)
+    final distanceToDest = _calcDistance(vehiclePos, _socketDestination!);
+    if (distanceToDest < 15.0) {
+      if (mounted && !_driverArrived) {
+        setState(() {
+          _driverArrived = true;
+          _socketRoutePoints = [];
+          _remainingDistanceMeters = 0.0;
+          _remainingDurationSeconds = 0.0;
+        });
+        _disconnectSocket();
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Your driver has arrived at the destination!'),
+            backgroundColor: Colors.green,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+      return;
+    }
+
+    setState(() {
+      _isFetchingSocketRoute = true;
+    });
+
+    try {
+      final trackingRepo = sl<TrackingRepository>();
+      final routeData = await trackingRepo.getDetailedRoute(vehiclePos, _socketDestination!);
+      if (mounted) {
+        setState(() {
+          _socketRoutePoints = routeData.points;
+          _remainingDistanceMeters = routeData.distanceMeters;
+          _remainingDurationSeconds = routeData.durationSeconds;
+        });
+      }
+    } catch (e) {
+      debugPrint('Error updating live direction line: $e');
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isFetchingSocketRoute = false;
+        });
+      }
+    }
+  }
+
+  /// Calculates the Haversine distance in meters.
+  double _calcDistance(LatLng from, LatLng to) {
+    const r = 6371000.0;
+    final lat1 = from.latitude * pi / 180;
+    final lat2 = to.latitude * pi / 180;
+    final dLat = (to.latitude - from.latitude) * pi / 180;
+    final dLng = (to.longitude - from.longitude) * pi / 180;
+    final a = sin(dLat / 2) * sin(dLat / 2) +
+        cos(lat1) * cos(lat2) * sin(dLng / 2) * sin(dLng / 2);
+    return r * 2 * atan2(sqrt(a), sqrt(1 - a));
+  }
+
   Future<void> _startSocketMockSimulation() async {
-    if (_waypoints.length < 2) {
-      _showErrorSnackBar('Please tap the map to add at least 2 waypoints for routing.');
+    if (_socketDriverStart == null || _socketDestination == null) {
+      _showErrorSnackBar('Please tap the map to set both Driver Start Point and Destination.');
       return;
     }
 
     setState(() {
       _isSocketSimulatorStarting = true;
+      _driverArrived = false;
     });
 
     try {
       final trackingRepo = sl<TrackingRepository>();
-      final points = await trackingRepo.getRoutePointsList(_waypoints);
+      final routeData = await trackingRepo.getDetailedRoute(_socketDriverStart!, _socketDestination!);
+      final points = routeData.points;
 
       if (points.isNotEmpty) {
         // Ensure connected to mock socket
@@ -207,6 +287,13 @@ class _CarMapBodyState extends State<_CarMapBody> {
         }
 
         if (!mounted) return;
+
+        setState(() {
+          _socketRoutePoints = points;
+          _remainingDistanceMeters = routeData.distanceMeters;
+          _remainingDurationSeconds = routeData.durationSeconds;
+          _totalDistanceMeters = routeData.distanceMeters;
+        });
 
         // Initialize/reset route points and passed points in the cubit
         context.read<CarAnimationCubit>().startRoute([points.first, points.first]);
@@ -255,6 +342,16 @@ class _CarMapBodyState extends State<_CarMapBody> {
       _socketSpeed = 0.0;
       _socketBattery = 100;
       _socketPacketCount = 0;
+      
+      // Uber/Careem socket routing states
+      _socketDriverStart = null;
+      _socketDestination = null;
+      _socketRoutePoints = [];
+      _isFetchingSocketRoute = false;
+      _remainingDistanceMeters = 0.0;
+      _remainingDurationSeconds = 0.0;
+      _totalDistanceMeters = 0.0;
+      _driverArrived = false;
     });
   }
 
@@ -506,7 +603,9 @@ class _CarMapBodyState extends State<_CarMapBody> {
         title: Text(
           _activeMode == MapMode.tracking 
               ? 'Car Routing' 
-              : (_activeMode == MapMode.rideHailing ? 'Ride Hailing' : 'Country Explorer')
+              : (_activeMode == MapMode.rideHailing 
+                  ? 'Ride Hailing' 
+                  : (_activeMode == MapMode.socket ? 'Uber/Careem Live Tracking' : 'Country Explorer'))
         ),
         centerTitle: true,
         leading: IconButton(
@@ -554,8 +653,8 @@ class _CarMapBodyState extends State<_CarMapBody> {
             initialCenter = _driverPoint!;
           } else if (_activeMode == MapMode.socket && state.currentPosition.latitude != 0) {
             initialCenter = state.currentPosition;
-          } else if (_activeMode == MapMode.socket && _waypoints.isNotEmpty) {
-            initialCenter = _waypoints.first;
+          } else if (_activeMode == MapMode.socket && _socketDriverStart != null) {
+            initialCenter = _socketDriverStart!;
           }
 
           return Stack(
@@ -569,10 +668,26 @@ class _CarMapBodyState extends State<_CarMapBody> {
                   onTap: (tapPosition, point) {
                     if (state.isAnimating && _activeMode != MapMode.socket) return;
 
-                    if (_activeMode == MapMode.tracking || _activeMode == MapMode.socket) {
+                    if (_activeMode == MapMode.tracking) {
                       setState(() {
                         _waypoints.add(point);
                         _routePoints = [];
+                      });
+                    } else if (_activeMode == MapMode.socket) {
+                      if (state.isAnimating) return; // Prevent tapping while simulation runs
+                      setState(() {
+                        if (_socketDriverStart == null) {
+                          _socketDriverStart = point;
+                        } else if (_socketDestination == null) {
+                          _socketDestination = point;
+                        } else {
+                          _socketDriverStart = point;
+                          _socketDestination = null;
+                          _socketRoutePoints = [];
+                          _remainingDistanceMeters = 0.0;
+                          _remainingDurationSeconds = 0.0;
+                          _driverArrived = false;
+                        }
                       });
                     } else if (_activeMode == MapMode.rideHailing) {
                       setState(() {
@@ -664,12 +779,20 @@ class _CarMapBodyState extends State<_CarMapBody> {
                   if (_activeMode == MapMode.socket)
                     PolylineLayer(
                       polylines: [
+                        if (_socketRoutePoints.isNotEmpty)
+                          Polyline(
+                            points: _socketRoutePoints,
+                            color: const Color(0xFF1E88E5),
+                            strokeWidth: 5.5,
+                            strokeCap: StrokeCap.round,
+                          ),
                         if (state.passedPoints.length > 1)
                           Polyline(
                             points: state.passedPoints,
-                            color: Colors.blueAccent,
-                            strokeWidth: 4.5,
+                            color: Colors.grey.withValues(alpha: 0.7),
+                            strokeWidth: 3.5,
                             strokeCap: StrokeCap.round,
+                            pattern: const StrokePattern.dotted(),
                           ),
                       ],
                     ),
@@ -769,6 +892,44 @@ class _CarMapBodyState extends State<_CarMapBody> {
                           ),
                       ],
 
+                      // Live Socket Mode Markers (Start and Destination)
+                      if (_activeMode == MapMode.socket) ...[
+                        if (_socketDriverStart != null && !state.isAnimating)
+                          Marker(
+                            point: _socketDriverStart!,
+                            width: 40.0,
+                            height: 40.0,
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF4CAF50), // Green for start
+                                shape: BoxShape.circle,
+                                border: Border.all(color: Colors.white, width: 2.5),
+                                boxShadow: const [
+                                  BoxShadow(color: Colors.black26, blurRadius: 4, offset: Offset(0, 2))
+                                ],
+                              ),
+                              child: const Icon(Icons.directions_car_rounded, color: Colors.white, size: 20),
+                            ),
+                          ),
+                        if (_socketDestination != null)
+                          Marker(
+                            point: _socketDestination!,
+                            width: 40.0,
+                            height: 40.0,
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFE53935), // Red flag for destination
+                                shape: BoxShape.circle,
+                                border: Border.all(color: Colors.white, width: 2.5),
+                                boxShadow: const [
+                                  BoxShadow(color: Colors.black26, blurRadius: 4, offset: Offset(0, 2))
+                                ],
+                              ),
+                              child: const Icon(Icons.flag_rounded, color: Colors.white, size: 20),
+                            ),
+                          ),
+                      ],
+
                       // Animated Car Marker
                       if (state.currentPosition.latitude != 0 && state.isAnimating)
                         Marker(
@@ -784,9 +945,14 @@ class _CarMapBodyState extends State<_CarMapBody> {
                             ),
                             child: Container(
                               decoration: BoxDecoration(
-                                color: _ridePhase == 'pickup' ? Colors.green : const Color(0xFF185FA5),
+                                color: _activeMode == MapMode.socket
+                                    ? const Color(0xFF1E293B) // Slate Dark (Uber style)
+                                    : (_ridePhase == 'pickup' ? Colors.green : const Color(0xFF185FA5)),
                                 shape: BoxShape.circle,
                                 border: Border.all(color: Colors.white, width: 2.5),
+                                boxShadow: const [
+                                  BoxShadow(color: Colors.black26, blurRadius: 4, offset: Offset(0, 2))
+                                ],
                               ),
                               child: const Icon(
                                 Icons.directions_car,
@@ -1403,138 +1569,308 @@ class _CarMapBodyState extends State<_CarMapBody> {
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
                           color: Colors.white.withValues(alpha: 0.95),
-                          borderRadius: BorderRadius.circular(16),
+                          borderRadius: BorderRadius.circular(24),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.1),
-                              blurRadius: 10,
-                              offset: const Offset(0, 4),
+                              color: Colors.black.withValues(alpha: 0.12),
+                              blurRadius: 16,
+                              offset: const Offset(0, 8),
                             )
                           ],
                         ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
                           children: [
-                            // Header + Status Indicator
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Row(
-                                  children: [
-                                    _buildStatusDot(),
-                                    const SizedBox(width: 8),
-                                    Text(
-                                      _socketConnectionState == SocketConnectionState.connected
-                                          ? 'Connected (Live Data)'
-                                          : (_socketConnectionState == SocketConnectionState.connecting
-                                              ? 'Connecting...'
-                                              : 'Disconnected'),
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        color: _socketConnectionState == SocketConnectionState.connected
-                                            ? Colors.green
-                                            : (_socketConnectionState == SocketConnectionState.connecting
-                                                ? Colors.orange
-                                                : Colors.grey),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                Text(
-                                  'Rx Packets: $_socketPacketCount',
-                                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.black54),
-                                ),
-                              ],
-                            ),
-                            const Divider(height: 16),
-                            // Telemetry Stats
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceAround,
-                              children: [
-                                _buildTelemetryItem(
-                                  icon: Icons.speed,
-                                  label: 'Speed',
-                                  value: '${_socketSpeed.toStringAsFixed(1)} km/h',
-                                  color: Colors.blueAccent,
-                                ),
-                                _buildTelemetryItem(
-                                  icon: Icons.battery_charging_full,
-                                  label: 'Vehicle Battery',
-                                  value: '$_socketBattery%',
-                                  color: Colors.green,
-                                ),
-                              ],
-                            ),
-                            const Divider(height: 16),
-                            
-                            // Instructions / Simulator Trigger
-                            if (_waypoints.isEmpty)
-                              const Row(
-                                children: [
-                                  Icon(Icons.touch_app, color: Colors.black54, size: 20),
-                                  SizedBox(width: 8),
-                                  Expanded(
-                                    child: Text(
-                                      'Tap map to set path points to stream simulated coordinates.',
-                                      style: TextStyle(fontSize: 12, color: Colors.black87),
-                                    ),
-                                  ),
-                                ],
-                              )
-                            else
-                              Column(
+                            if (!state.isAnimating && !_driverArrived) ...[
+                              // Setup Phase
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: [
                                   Row(
                                     children: [
-                                      const Icon(Icons.route_outlined, color: Colors.blueAccent, size: 18),
+                                      _buildStatusDot(),
                                       const SizedBox(width: 8),
-                                      Expanded(
-                                        child: Text(
-                                          'Path has ${_waypoints.length} points defined.',
-                                          style: const TextStyle(fontSize: 12, color: Colors.black87),
+                                      Text(
+                                        _socketConnectionState == SocketConnectionState.connected
+                                            ? 'Connected (Simulator)'
+                                            : (_socketConnectionState == SocketConnectionState.connecting
+                                                ? 'Connecting...'
+                                                : 'Disconnected'),
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 13,
+                                          color: _socketConnectionState == SocketConnectionState.connected
+                                              ? Colors.green
+                                              : (_socketConnectionState == SocketConnectionState.connecting
+                                                  ? Colors.orange
+                                                  : Colors.grey),
                                         ),
                                       ),
                                     ],
                                   ),
-                                  const SizedBox(height: 8),
+                                  Text(
+                                    'Rx Packets: $_socketPacketCount',
+                                    style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.black54),
+                                  ),
+                                ],
+                              ),
+                              const Divider(height: 16),
+                              if (_socketDriverStart == null)
+                                const Row(
+                                  children: [
+                                    Icon(Icons.location_on_rounded, color: Colors.green, size: 24),
+                                    SizedBox(width: 12),
+                                    Expanded(
+                                      child: Text(
+                                        'Tap map to set Driver Start Point (A)',
+                                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.black87),
+                                      ),
+                                    ),
+                                  ],
+                                )
+                              else if (_socketDestination == null)
+                                const Row(
+                                  children: [
+                                    Icon(Icons.flag_rounded, color: Colors.red, size: 24),
+                                    SizedBox(width: 12),
+                                    Expanded(
+                                      child: Text(
+                                        'Tap map to set Ride Destination Point (B)',
+                                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.black87),
+                                      ),
+                                    ),
+                                  ],
+                                )
+                              else ...[
+                                Row(
+                                  children: [
+                                    const Icon(Icons.route_rounded, color: Colors.blueAccent, size: 20),
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: Text(
+                                        'Trip Route Ready: ~${(_remainingDistanceMeters / 1000).toStringAsFixed(1)} km (~${(_remainingDurationSeconds / 60).toStringAsFixed(0)} mins)',
+                                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.black87),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 12),
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: ElevatedButton.icon(
+                                        icon: _isSocketSimulatorStarting
+                                            ? const SizedBox(
+                                                width: 18,
+                                                height: 18,
+                                                child: CircularProgressIndicator(
+                                                  strokeWidth: 2,
+                                                  color: Colors.white,
+                                                ),
+                                              )
+                                            : const Icon(Icons.play_arrow_rounded),
+                                        label: const Text('Start Uber/Careem Ride'),
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: const Color(0xFF1E293B), // Slate dark
+                                          foregroundColor: Colors.white,
+                                          padding: const EdgeInsets.symmetric(vertical: 12),
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(12),
+                                          ),
+                                        ),
+                                        onPressed: _isSocketSimulatorStarting ? null : _startSocketMockSimulation,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 10),
+                                    ElevatedButton(
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: const Color(0xFFE24B4A),
+                                        foregroundColor: Colors.white,
+                                        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(12),
+                                        ),
+                                      ),
+                                      onPressed: () => _resetAllStates(MapMode.socket),
+                                      child: const Icon(Icons.refresh),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ] else ...[
+                              // Active Trip Phase (Uber/Careem style card)
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
                                   Row(
                                     children: [
-                                      Expanded(
-                                        child: ElevatedButton.icon(
-                                          icon: _isSocketSimulatorStarting
-                                              ? const SizedBox(
-                                                  width: 16,
-                                                  height: 16,
-                                                  child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                                                )
-                                              : const Icon(Icons.settings_input_component, size: 18),
-                                          label: const Text('Stream Simulated GPS', style: TextStyle(fontSize: 12)),
-                                          style: ElevatedButton.styleFrom(
-                                            backgroundColor: const Color(0xFF185FA5),
-                                            foregroundColor: Colors.white,
-                                            padding: const EdgeInsets.symmetric(vertical: 10),
-                                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                                          ),
-                                          onPressed: _isSocketSimulatorStarting ? null : _startSocketMockSimulation,
+                                      Container(
+                                        width: 10,
+                                        height: 10,
+                                        decoration: BoxDecoration(
+                                          color: _driverArrived ? Colors.green : Colors.blueAccent,
+                                          shape: BoxShape.circle,
                                         ),
                                       ),
                                       const SizedBox(width: 8),
-                                      ElevatedButton(
-                                        style: ElevatedButton.styleFrom(
-                                          backgroundColor: const Color(0xFFE24B4A),
-                                          foregroundColor: Colors.white,
-                                          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
-                                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                      Text(
+                                        _driverArrived ? 'Arrived at Destination' : 'Driver on the way',
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          color: _driverArrived ? Colors.green : Colors.blueAccent,
+                                          fontSize: 14,
                                         ),
-                                        onPressed: () {
-                                          _resetAllStates(MapMode.socket);
-                                        },
-                                        child: const Icon(Icons.refresh, size: 18),
+                                      ),
+                                    ],
+                                  ),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                    decoration: BoxDecoration(
+                                      color: _driverArrived ? Colors.green.withValues(alpha: 0.15) : const Color(0xFF1E293B).withValues(alpha: 0.15),
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: Text(
+                                      _driverArrived 
+                                          ? 'Arrived' 
+                                          : (_remainingDurationSeconds < 60 ? 'Arriving now' : '${(_remainingDurationSeconds / 60).toStringAsFixed(0)} min'),
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        color: _driverArrived ? Colors.green : const Color(0xFF1E293B),
+                                        fontSize: 12,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 16),
+                              // Progress bar
+                              Row(
+                                children: [
+                                  const Icon(Icons.directions_car_rounded, color: Color(0xFF1E293B), size: 16),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: ClipRRect(
+                                      borderRadius: BorderRadius.circular(4),
+                                      child: LinearProgressIndicator(
+                                        value: _totalDistanceMeters > 0 
+                                            ? (1.0 - (_remainingDistanceMeters / _totalDistanceMeters)).clamp(0.0, 1.0)
+                                            : 0.0,
+                                        backgroundColor: Colors.grey.shade200,
+                                        color: const Color(0xFF1E88E5),
+                                        minHeight: 6,
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  const Icon(Icons.flag_rounded, color: Colors.redAccent, size: 16),
+                                ],
+                              ),
+                              const SizedBox(height: 6),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    _driverArrived ? '0 m remaining' : '${(_remainingDistanceMeters / 1000).toStringAsFixed(2)} km left',
+                                    style: TextStyle(fontSize: 11, color: Colors.grey.shade600, fontWeight: FontWeight.w600),
+                                  ),
+                                  Text(
+                                    'Total: ${(_totalDistanceMeters / 1000).toStringAsFixed(1)} km',
+                                    style: TextStyle(fontSize: 11, color: Colors.grey.shade500),
+                                  ),
+                                ],
+                              ),
+                              const Divider(height: 16),
+                              // Driver Card
+                              Row(
+                                children: [
+                                  CircleAvatar(
+                                    radius: 20,
+                                    backgroundColor: const Color(0xFFE2E8F0),
+                                    child: Icon(Icons.person_outline_rounded, color: Colors.blueGrey.shade700),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        const Text(
+                                          'Capt. Ahmed',
+                                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.black87),
+                                        ),
+                                        Row(
+                                          children: [
+                                            const Icon(Icons.star_rounded, color: Colors.amber, size: 14),
+                                            Text(
+                                              ' 4.9',
+                                              style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.grey.shade700),
+                                            ),
+                                          ],
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  Column(
+                                    crossAxisAlignment: CrossAxisAlignment.end,
+                                    children: [
+                                      const Text(
+                                        'Hyundai Elantra (White)',
+                                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.black87),
+                                      ),
+                                      const SizedBox(height: 2),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                        decoration: BoxDecoration(
+                                          border: Border.all(color: Colors.grey.shade400, width: 1.5),
+                                          borderRadius: BorderRadius.circular(6),
+                                          color: Colors.grey.shade50,
+                                        ),
+                                        child: const Text(
+                                          'XYZ-9876',
+                                          style: TextStyle(fontFamily: 'monospace', fontWeight: FontWeight.bold, fontSize: 11),
+                                        ),
                                       ),
                                     ],
                                   ),
                                 ],
                               ),
+                              const Divider(height: 16),
+                              // Telemetry
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                                children: [
+                                  _buildTelemetryItem(
+                                    icon: Icons.speed,
+                                    label: 'Speed',
+                                    value: '${_socketSpeed.toStringAsFixed(1)} km/h',
+                                    color: Colors.blueAccent,
+                                  ),
+                                  _buildTelemetryItem(
+                                    icon: Icons.battery_charging_full,
+                                    label: 'Vehicle Battery',
+                                    value: '$_socketBattery%',
+                                    color: Colors.green,
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 16),
+                              SizedBox(
+                                width: double.infinity,
+                                child: ElevatedButton.icon(
+                                  icon: const Icon(Icons.cancel_outlined),
+                                  label: const Text('Cancel Ride'),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: const Color(0xFFE24B4A),
+                                    foregroundColor: Colors.white,
+                                    padding: const EdgeInsets.symmetric(vertical: 12),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                  ),
+                                  onPressed: () => _resetAllStates(MapMode.socket),
+                                ),
+                              ),
+                            ],
                           ],
                         ),
                       ),
